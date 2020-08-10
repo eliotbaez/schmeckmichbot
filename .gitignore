@@ -1,0 +1,5 @@
+privateinfo.py
+__pycache__/*
+posts_replied_to.txt
+messages_replied_to.txt
+
