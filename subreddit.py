@@ -3,8 +3,6 @@
 # Add compatibility with new schmeckle notation:
 # "SHM XX.XX"
 
-
-
 import privateinfo
 import praw
 import pdb
@@ -14,7 +12,6 @@ import os
 import urllib3
 import sys
 import datetime
-
 
 if len(sys.argv) > 1:
 	argv = ""
@@ -63,13 +60,8 @@ def getRates ():
 
 def reply_to_stream (subreddit, scrape_submissions=False, log_subs=False, Skip_existing=False, exclude=""):
 
-	#start_time = int(time.time())
 	replies_sent = 0
 	global cache
-	#print("in mentions:\n")
-	#print("in submission: ", submission.title)
-	#for comment in submission.comments.list():
-	#for comment in reddit.inbox.mentions(limit=100):
 	try:
 
 		if scrape_submissions == True: # opted to reply to submissions, not comments
@@ -81,12 +73,10 @@ def reply_to_stream (subreddit, scrape_submissions=False, log_subs=False, Skip_e
 					if time.time() - lastRateRefreshTime > refresh_interval:
 						getRates()
 					replySent = False
-					#print("%d replies sent so far\n" % replies_sent)
 					print("\n")
 					try:
 						author = submission.author
 						time_created = submission.created
-						#return datetime.datetime.fromtimestamp(time)
 						
 						print("in r/%s" % submission.subreddit)
 						print("by u/%-22s on %s" % (author.name, datetime.datetime.fromtimestamp(time_created)))
@@ -100,11 +90,8 @@ def reply_to_stream (subreddit, scrape_submissions=False, log_subs=False, Skip_e
 						print("AttributeError")
 						has_selftext = False
 					
-					
-					#pass
 					if has_selftext:
 						if submission.id not in posts_replied_to and not re.search("(?i)SchmeckMichBot", author.name):
-							#print ("id not in postsrepliedto and no schmeckmichbot in name")
 							Match_title = re.findall(r"(?i)([0-9,]*\.?[0-9]+)\s*([kmbt]|hundred|thousand|(m|b|tr)illion)? +(sc?hm[ae](ck|ch|c|k))((le|el)?)", submission.title)
 							Match_selftext = re.findall("pattern", "none") # by default
 							bad_numbers = re.search("[0-9]{60}[0-9]*", submission.selftext)
@@ -117,11 +104,8 @@ def reply_to_stream (subreddit, scrape_submissions=False, log_subs=False, Skip_e
 								for amount in Match_all:
 									remark = ""
 									amount_no_commas = amount[0].replace(',', '')
-									#amounts_seen += str(amount_no_commas)
 									
-									#amount[0] = amount[0].replace(',', '')
-									
-									if amount[6] == '': # if amount given is in shmacks and not schmeckles
+                                                                        if amount[6] == '': # if amount given is in shmacks and not schmeckles
 										amount_PFE = float(amount_no_commas) * 101
 										base_unit = "shmacks"
 									else:
@@ -200,7 +184,6 @@ def reply_to_stream (subreddit, scrape_submissions=False, log_subs=False, Skip_e
 				if str(comment.subreddit) not in exclude: # subreddit not on exclude list
 					if time.time() - lastRateRefreshTime > refresh_interval:
 						getRates()
-					#print("%d replies sent so far\n" % replies_sent)
 					replySent = False
 					print("\n")
 					try:
@@ -217,7 +200,6 @@ def reply_to_stream (subreddit, scrape_submissions=False, log_subs=False, Skip_e
 					except AttributeError:
 						no_body = True
 					
-					#pass
 					if has_body:
 						
 						if comment.id not in posts_replied_to and not re.search("(?i)SchmeckMichBot", author.name):
@@ -241,7 +223,6 @@ def reply_to_stream (subreddit, scrape_submissions=False, log_subs=False, Skip_e
 									else:
 										amount_PFE = float(amount_no_commas)
 										base_unit = "schmeckles"
-
 
 									if re.search("(?i)hundred", amount[1]):
 										multiplier = 100
@@ -314,7 +295,6 @@ def reply_to_stream (subreddit, scrape_submissions=False, log_subs=False, Skip_e
 
 Skip_existing = False
 total_replies = 0
-#sub_name = input("\n*Enter subreddit name:*\nr/")
 
 got_post_type = False
 got_subreddit = False
@@ -326,11 +306,9 @@ if len(sys.argv) > 1: # interpret options
 	argv = ""
 	for arg in sys.argv:
 		argv += arg + ' '
-	#print(argv)
 	exc_match = re.search("(?i) -(x|-exclude) ((r\/([a-z0-9]{1,23}) )+)", argv)
 	if exc_match:
 		exclude = exc_match.group(2)
-		#print(exclude)
 
 	skip_match = re.search("(?i) -(k|-skip_existing)", argv)
 	if skip_match:
@@ -339,8 +317,6 @@ if len(sys.argv) > 1: # interpret options
 	interval_match = re.search("(?i) -(i|-interval) ([0-9]+)", argv)
 	if interval_match:		
 		refresh_interval = int(interval_match.group(2))
-	# else:
-	# 	refresh_interval = 1800
 		
 	if re.search("(?i) -(ls|-logsubs)", argv):
 		log_subs = True
@@ -365,7 +341,6 @@ if True:
 	if not got_subreddit:
 		sub_name = input("\n*Enter subreddit name:*\nr/")
 	while not got_post_type:
-	#while False:
 		scrape_submissions = input("Scrape submissions? (Y for submissions, N for comments):").upper()
 		got_post_type = re.search("^[YN]$", scrape_submissions)
 		if got_post_type:
@@ -377,24 +352,13 @@ getRates()
 
 while True:
 	try:
-	#reply_to_stream("testingground4bots", skip_existing)
-		# comment 3 lines below when deploying
-		# print ("scrape_submissions=")
-		# print (scrape_submissions)
-		# time.sleep(10)
-		
 		reply_finished = reply_to_stream(sub_name, scrape_submissions, log_subs, Skip_existing, exclude)
 		total_replies += reply_finished[1]
 		if reply_finished[0] == -1:
-			#pass
 			break
 			raise
-		#total_replies += reply_to_stream("testingground4bots", skip_existing)
 	except:
 		raise
 		print("\n\nreplies sent: %d" % total_replies)
 		break
-		#raise
 print("\n\n")
-
-

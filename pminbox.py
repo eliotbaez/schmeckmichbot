@@ -3,8 +3,6 @@
 # Add compatibility with new schmeckle notation:
 # "SHM XX.XX"
 
-
-
 import privateinfo
 import praw
 import pdb
@@ -47,13 +45,8 @@ def reply_to_stream ():
     with open("messages_replied_to.txt") as f:
         messages_replied_to = f.read().split('\n')
 
-	#start_time = int(time.time())
     replies_sent = 0
     global cache
-	#print("in mentions:\n")
-	#print("in submission: ", submission.title)
-	#for comment in submission.comments.list():
-	#for comment in reddit.inbox.mentions(limit=100):
     try:
         for message in praw.models.util.stream_generator(reddit.inbox.messages):
             amounts_seen = ""
@@ -61,12 +54,10 @@ def reply_to_stream ():
             if time.time() - lastRateRefreshTime > refresh_interval: # refresh exchange rates
                 getRates()
             replySent = False
-					#print("%d replies sent so far\n" % replies_sent)
             print("\n")
             try:
                 author = message.author
                 time_created = message.created_utc
-                #return datetime.datetime.fromtimestamp(time)
                 	
                 print("in Private Messages")
                 print("from u/%-22s on %s" % (author.name, datetime.datetime.fromtimestamp(time_created)))
@@ -75,12 +66,9 @@ def reply_to_stream ():
                 print('"%s"' % message.body)
             except AttributeError:
                 print("AttributeError")
-			#has_selftext = False
 					
 					
-					#pass
             if message.id not in messages_replied_to:
-                #print ("id not in postsrepliedto and no schmeckmichbot in name")
                 Match_subject = re.findall(r"(?i)([0-9,]*\.?[0-9]+)\s*([kmbt]|hundred|thousand|(m|b|tr)illion)? +(sc?hm[ae](ck|ch|c|k))((le|el)?)", message.subject)
                 Match_body = re.findall("pattern", "none") # by default there should be no match
                 bad_numbers = re.search("[0-9]{60}[0-9]*", message.body) # first detect if the processor will get stuck doing useless work
@@ -154,7 +142,6 @@ def reply_to_stream ():
                     try:
                         message.reply(reply_contents)
                         replySent = True
-                        #message.mark_read()
                         replies_sent += 1
                         print("reply sent: table")
                     except:
@@ -168,7 +155,6 @@ def reply_to_stream ():
                     print("no reply sent: no amount recognized")
             else:
                 print("no reply sent: already replied")				
-							# f.write(post_id + "\n")
             print("%02d replies sent            as of %s" % (replies_sent, datetime.datetime.fromtimestamp(time.mktime(time.gmtime()))))
     except:
         raise
@@ -176,34 +162,22 @@ def reply_to_stream ():
 
 
 total_replies = 0
-#sub_name = input("\n*Enter subreddit name:*\nr/")
-
 
 refresh_interval = 1800 # 1800 second or 30 minutes by defaualt
-
 
 getRates()
 
 while True:
     try:
-	#reply_to_stream("testingground4bots", skip_existing)
-		# comment 3 lines below when deploying
-		# print ("scrape_submissions=")
-		# print (scrape_submissions)
-		# time.sleep(10)
-		
         reply_finished = reply_to_stream()
         total_replies += reply_finished[1]
         if reply_finished[0] == -1:
-			#pass
             break
             raise
-		#total_replies += reply_to_stream("testingground4bots", skip_existing)
     except:
         raise
         print("\n\nreplies sent: %d" % total_replies)
         break
-		#raise
 print("\n\n")
 
 
