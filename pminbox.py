@@ -1,10 +1,12 @@
 #!/usr/bin/python3
-# TODO 
+# TODO:
 # Add compatibility with new schmeckle notation:
 # "SHM XX.XX"
 
 import privateinfo
 import praw
+import json
+from collections import namedtuple
 import pdb
 import re
 import time
@@ -12,6 +14,7 @@ import os
 import urllib3
 import sys
 import datetime
+import rate_updater
 
 
 #reddit = praw.reddit(client_id, client_secret, user_agent, username, password)
@@ -22,22 +25,26 @@ cache = ""
 
 
 def getRates ():
-    print("Retrieving currency exchange rates...\n")
-    http = urllib3.PoolManager()
-    rate_data = http.request("GET", "https://api.ratesapi.io/latest?base=USD&symbols=EUR,GBP,CAD,RUB,CNY").data.decode("utf-8")
+    os.system('python3 rate_updater.py &')
+    print("Checking currency exchange rates...\n")
+    rate_data=None
+    with open(rate_updater.datafile) as f:
+        rate_data = f.read()
+    global rates
+    rates = json.loads(rate_data, object_hook=lambda d: namedtuple('Rates', d.keys())(*d.values()))
     global lastRateRefreshTime
-    lastRateRefreshTime = time.time() # keep time of last refresh in a buffer, to keep rates up to date
+    lastRateRefreshTime = rate_updater.getTimestamp(rate_data) # keep time of last refresh in a buffer, to keep rates up to date
     print("Done.\n")
     global rate_EUR
-    rate_EUR = float(re.search(r"\"EUR\":([0-9]+\.{0,1}[0-9]*)", rate_data).group(1))
+    rate_EUR = float(rates.rates.EUR)
     global rate_GBP 
-    rate_GBP= float(re.search(r"\"GBP\":([0-9]+\.{0,1}[0-9]*)", rate_data).group(1))
+    rate_GBP = float(rates.rates.GBP)
     global rate_CAD
-    rate_CAD = float(re.search(r"\"CAD\":([0-9]+\.{0,1}[0-9]*)", rate_data).group(1))
+    rate_CAD = float(rates.rates.CAD)
     global rate_RUB
-    rate_RUB = float(re.search(r"\"RUB\":([0-9]+\.{0,1}[0-9]*)", rate_data).group(1))
+    rate_RUB = float(rates.rates.RUB)
     global rate_CNY
-    rate_CNY = float(re.search(r"\"CNY\":([0-9]+\.{0,1}[0-9]*)", rate_data).group(1))
+    rate_CNY = float(rates.rates.CNY)
     global rate_SHMACK
     rate_SHMACK = (1 / 101)
 
@@ -136,8 +143,6 @@ def reply_to_stream ():
                             reply_contents += "%s%.2f %s is:  \n%.2f **USD**; %.2f **%s**; %.2f **EUR**; %.2f **GBP**; %.2f **CAD**; %.2f **RUB**; %.2f **CNY**\n\n" % (remark, base_amount, base_unit, amount_USD, other_amount, other_abbrev, amount_EUR, amount_GBP, amount_CAD, amount_RUB, amount_CNY)
                             amounts_seen += str(base_amount) + base_abbrev
 								
-                                                                # terminate the reply
-                    reply_contents += "[view exchange rate source](http://api.ratesapi.io/%s?base=USD)" % datetime.date.fromtimestamp(time.mktime(time.gmtime()))
                     # reply_contents += "  \nreply with a 3-letter currency code to get your quantity converted to that code"
                     try:
                         message.reply(reply_contents)
@@ -167,6 +172,7 @@ refresh_interval = 1800 # 1800 second or 30 minutes by defaualt
 
 getRates()
 
+# TODO: fix whatever the hell this is
 while True:
     try:
         reply_finished = reply_to_stream()

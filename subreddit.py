@@ -5,6 +5,8 @@
 
 import privateinfo
 import praw
+import json
+from collections import namedtuple
 import pdb
 import re
 import time
@@ -12,6 +14,7 @@ import os
 import urllib3
 import sys
 import datetime
+import rate_updater
 
 if len(sys.argv) > 1:
 	argv = ""
@@ -39,24 +42,28 @@ cache = ""
 # rate_EUR = rate_EUR = rate_GPB = rate_CAD = rate_CNY= rate_SHMACK = 1.0
 
 def getRates ():
-	print("Retrieving currency exchange rates...\n")
-	http = urllib3.PoolManager()
-	rate_data = http.request("GET", "https://api.ratesapi.io/latest?base=USD&symbols=EUR,GBP,CAD,RUB,CNY").data.decode("utf-8")
-	global lastRateRefreshTime
-	lastRateRefreshTime = time.time() # keep time of last refresh in a buffer, to keep rates up to date
-	print("Done.\n")
-	global rate_EUR
-	rate_EUR = float(re.search(r"\"EUR\":([0-9]+\.{0,1}[0-9]*)", rate_data).group(1))
-	global rate_GBP 
-	rate_GBP= float(re.search(r"\"GBP\":([0-9]+\.{0,1}[0-9]*)", rate_data).group(1))
-	global rate_CAD
-	rate_CAD = float(re.search(r"\"CAD\":([0-9]+\.{0,1}[0-9]*)", rate_data).group(1))
-	global rate_RUB
-	rate_RUB = float(re.search(r"\"RUB\":([0-9]+\.{0,1}[0-9]*)", rate_data).group(1))
-	global rate_CNY
-	rate_CNY = float(re.search(r"\"CNY\":([0-9]+\.{0,1}[0-9]*)", rate_data).group(1))
-	global rate_SHMACK
-	rate_SHMACK = (1 / 101)
+    os.system('python3 rate_updater.py &')
+    print("Checking currency exchange rates...\n")
+    rate_data=None
+    with open(rate_updater.datafile) as f:
+        rate_data = f.read()
+    global rates
+    rates = json.loads(rate_data, object_hook=lambda d: namedtuple('Rates', d.keys())(*d.values()))
+    global lastRateRefreshTime
+    lastRateRefreshTime = rate_updater.getTimestamp(rate_data) # keep time of last refresh in a buffer, to keep rates up to date
+    print("Done.\n")
+    global rate_EUR
+    rate_EUR = float(rates.rates.EUR)
+    global rate_GBP 
+    rate_GBP = float(rates.rates.GBP)
+    global rate_CAD
+    rate_CAD = float(rates.rates.CAD)
+    global rate_RUB
+    rate_RUB = float(rates.rates.RUB)
+    global rate_CNY
+    rate_CNY = float(rates.rates.CNY)
+    global rate_SHMACK
+    rate_SHMACK = (1 / 101)
 
 def reply_to_stream (subreddit, scrape_submissions=False, log_subs=False, Skip_existing=False, exclude=""):
 
@@ -105,7 +112,7 @@ def reply_to_stream (subreddit, scrape_submissions=False, log_subs=False, Skip_e
 									remark = ""
 									amount_no_commas = amount[0].replace(',', '')
 									
-                                                                        if amount[6] == '': # if amount given is in shmacks and not schmeckles
+									if amount[6] == '': # if amount given is in shmacks and not schmeckles
 										amount_PFE = float(amount_no_commas) * 101
 										base_unit = "shmacks"
 									else:
@@ -158,7 +165,7 @@ def reply_to_stream (subreddit, scrape_submissions=False, log_subs=False, Skip_e
 										reply_contents += "%s%.2f %s is:\n\nUSD|%s|EUR|GBP|CAD|RUB|CNY  \n---|------|---|---|---|---|---  \n%.2f|%.2f|%.2f|%.2f|%.2f|%.2f|%.2f\n\n" % (remark, base_amount, base_unit, other_abbrev, amount_USD, other_amount, amount_EUR, amount_GBP, amount_CAD, amount_RUB, amount_CNY)
 										amounts_seen += str(base_amount) + base_abbrev
 								
-								reply_contents += "***\n^([exchange rate source](http://api.ratesapi.io/%s?base=USD) | created by [u/Nissingmo](http://reddit.com/u/nissingmo))" % datetime.date.fromtimestamp(time.mktime(time.gmtime()))
+								reply_contents += "***\n^(created by [u/Nissingmo](http://reddit.com/u/nissingmo))" 
 								submission.reply(reply_contents)
 								cache += submission.id
 								posts_replied_to.append(submission.id)
