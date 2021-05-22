@@ -3,6 +3,7 @@
 # Add compatibility with new schmeckle notation:
 # "SHM XX.XX"
 
+from logging import lastResort
 import privateinfo
 import praw
 import json
@@ -70,6 +71,7 @@ def reply_to_stream (subreddit, scrape_submissions=False, log_subs=False, Skip_e
 	replies_sent = 0
 	global cache
 	global refresh_interval
+	global lastRateRefreshTime
 	try:
 
 		if scrape_submissions == True: # opted to reply to submissions, not comments
