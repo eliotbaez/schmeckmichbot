@@ -168,7 +168,7 @@ def reply_to_stream ():
 
 total_replies = 0
 
-refresh_interval = 1800 # 1800 second or 30 minutes by defaualt
+refresh_interval = 3600
 
 getRates()
 

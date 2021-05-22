@@ -24,7 +24,7 @@ if len(sys.argv) > 1:
 	#print(argv)
 	if re.search("(?i) --help", argv):
 		print ("\nUSAGE: python3 schmeckmichbot.py [-c] [-s] [-ls] [-i N] [-k] [-r/subreddit] [-x r/sub1 [[r/sub2] [r/subX...]]\n")
-		print ("Options:\n      -c   scrape Comments\n      -s   scrape Submissions\n     -ls   Log Subreddits\n  -r/sub   specifies subreddit for scraping\n    -i N   override exchange rate refresh Interval in seconds (default is 1800)\n      -k   sKip existing posts\n-x r/sub   specifies subreddits to eXclude\n")
+		print ("Options:\n      -c   scrape Comments\n      -s   scrape Submissions\n     -ls   Log Subreddits\n  -r/sub   specifies subreddit for scraping\n    -i N   override exchange rate refresh Interval in seconds (default is 3600)\n      -k   sKip existing posts\n-x r/sub   specifies subreddits to eXclude\n")
 		exit()
 
 
@@ -81,6 +81,7 @@ def reply_to_stream (subreddit, scrape_submissions=False, log_subs=False, Skip_e
 				amounts_seen = ""
 				if str(submission.subreddit) not in exclude: # subreddit not on exclude list
 					if time.time() - lastRateRefreshTime > refresh_interval:
+						print('this dood is refreshing already!!')
 						getRates()
 					replySent = False
 					print("\n")
@@ -193,6 +194,8 @@ def reply_to_stream (subreddit, scrape_submissions=False, log_subs=False, Skip_e
 				amounts_seen = ""
 				if str(comment.subreddit) not in exclude: # subreddit not on exclude list
 					if time.time() - lastRateRefreshTime > refresh_interval:
+						print ('%s - %s' % (time.time(), lastRateRefreshTime))
+						print('this dood is refreshing already!!')
 						getRates()
 					replySent = False
 					print("\n")
@@ -309,7 +312,7 @@ total_replies = 0
 got_post_type = False
 got_subreddit = False
 log_subs = False
-refresh_interval = 1800 # 30 minutes by defaualt
+refresh_interval = 3600
 exclude = ""
 
 if len(sys.argv) > 1: # interpret options
