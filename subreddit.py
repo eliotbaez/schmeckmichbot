@@ -199,22 +199,24 @@ def reply_to_stream (subreddit, scrape_submissions=False, log_subs=False, Skip_e
 						getRates()
 					replySent = False
 					print("\n")
-					try:
-						author = comment.author
-						time_created = comment.created
-						
-						print("in r/%s" % comment.subreddit)
-						print("by u/%-22s on %s" % (author.name, datetime.datetime.fromtimestamp(time_created)))
-						has_body = True
-						print("comment body:\n%s" % comment.body)
-						if comment.body == "[deleted]":
-							has_body = False
 
-					except AttributeError:
-						no_body = True
+					comment_still_exists = True
+					if comment.body == "[deleted]" or comment.author == None:
+						comment_still_exists = False
 					
-					if has_body:
-						
+					if comment_still_exists:
+						try:
+							author = comment.author
+							time_created = comment.created
+							
+							print("in r/%s" % comment.subreddit)
+							print("by u/%-22s on %s" % (author.name, datetime.datetime.fromtimestamp(time_created)))
+							print("comment body:\n%s" % comment.body)
+
+						except AttributeError:
+							no_body = True
+
+						#print (comment.permalink)
 						if comment.id not in posts_replied_to and not re.search("(?i)SchmeckMichBot", author.name):
 							# VERY IMPORTANT
 							bad_numbers = re.search("[0-9]{60}[0-9]*", comment.body) # too long numbers to process, also beyond python accuracy
